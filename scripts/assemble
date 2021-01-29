@@ -36,6 +36,7 @@ function install_bindep {
     if [ -f bindep.txt ] ; then
         bindep -l newline | sort >> /output/bindep/run.txt || true
         if [ "$RELEASE" == "centos" ] ; then
+            echo -e "\nProducing bindep.txt compile"
             bindep -l newline -b epel | sort >> /output/bindep/stage.txt || true
             grep -Fxvf /output/bindep/run.txt /output/bindep/stage.txt >> /output/bindep/epel.txt || true
             rm -rf /output/bindep/stage.txt
@@ -59,6 +60,7 @@ function install_wheels {
     # possible to tell what is the wheel for the project and
     # what is the wheel cache.
     if [ -f setup.py ] ; then
+        echo -e "\nInstalling_pip_sdist /tmp/src/setup.py"
         python3.8 setup.py sdist bdist_wheel -d /output/wheels
     fi
 
@@ -69,11 +71,13 @@ function install_wheels {
     # Only do this for the main package (i.e. only write requirements
     # once).
     if [ -f /tmp/src/requirements.txt ] && [ ! -f /output/requirements.txt ] ; then
+        echo -e "\nInstalling_pip_venv /tmp/src/requirements.txt"
         /tmp/venv/bin/pip install $CONSTRAINTS --cache-dir=/output/wheels -r /tmp/src/requirements.txt
         cp /tmp/src/requirements.txt /output/requirements.txt
     fi
     # If we didn't build wheels, we can skip trying to install it.
     if [ $(ls -1 /output/wheels/*whl 2>/dev/null | wc -l) -gt 0 ]; then
+        echo -e "\nInstalling_pip_venv /output/wheels/*whl"
         /tmp/venv/bin/pip uninstall -y /output/wheels/*.whl
         /tmp/venv/bin/pip install $CONSTRAINTS --cache-dir=/output/wheels /output/wheels/*whl
     fi
@@ -82,6 +86,7 @@ function install_wheels {
     # needed wheels in the wheel cache. get-extras-packages also
     # writes out the req files into /output/$extra/requirements.txt.
     for req in $(get-extras-packages) ; do
+        echo -e "\nInstalling_pip_venv req: $req"
         /tmp/venv/bin/pip install $CONSTRAINTS --cache-dir=/output/wheels "$req"
     done
 }
@@ -116,6 +121,7 @@ fi
 # If we got a list of packages, install them, otherwise install the
 # main package.
 if [[ $PACKAGES ]] ; then
+    echo -e "\nInstalling_pip_venv PACKAGES: $PACKAGES"
     /tmp/venv/bin/pip install $CONSTRAINTS --cache-dir=/output/wheels $PACKAGES
     for package in $PACKAGES ; do
       echo "$package" >> /output/packages.txt

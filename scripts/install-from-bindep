@@ -21,6 +21,7 @@ dnf update -y
 if [ -f /output/bindep/run.txt ] ; then
     PACKAGES=$(cat /output/bindep/run.txt)
     if [ ! -z "$PACKAGES" ]; then
+        echo -e "\nInstalling_dnf /output/bindep/run.txt"
         dnf install -y $PACKAGES
     fi
 fi
@@ -28,6 +29,7 @@ fi
 if [ -f /output/bindep/epel.txt ] ; then
     EPEL_PACKAGES=$(cat /output/bindep/epel.txt)
     if [ ! -z "$EPEL_PACKAGES" ]; then
+        echo -e "\nInstalling_dnf /output/bindep/epel.txt"
         dnf install -y --enablerepo epel $EPEL_PACKAGES
     fi
 fi
@@ -42,6 +44,7 @@ fi
 # to do things like pick up patched but unreleased versions
 # of dependencies.
 if [ -f /output/requirements.txt ] ; then
+    echo -e "\nInstalling_pip /output/requirements.txt"
     pip3 install $CONSTRAINTS --cache-dir=/output/wheels -r /output/requirements.txt
 fi
 
@@ -54,6 +57,7 @@ done
 if [ -f /output/packages.txt ] ; then
   # If a package list was passed to assemble, install that in the final
   # image.
+  echo -e "\nInstalling_pip /output/packages.txt"
   pip3 install $CONSTRAINTS --cache-dir=/output/wheels -r /output/packages.txt $EXTRAS
 else
   # Install the wheels. Uninstall any existing version as siblings maybe
@@ -62,9 +66,11 @@ else
   # automatic dependencies.
   # NOTE(pabelanger): It is possible a project may not have a wheel, but does have requirements.txt
   if [ $(ls -1 /output/wheels/*whl 2>/dev/null | wc -l) -gt 0 ]; then
+      echo -e "\nInstalling_pip (and uninstalling) /output/wheels/*.whl"
       pip3 uninstall -y /output/wheels/*.whl
       pip3 install $CONSTRAINTS --cache-dir=/output/wheels /output/wheels/*.whl $EXTRAS
   elif [ ! -z "$EXTRAS" ] ; then
+      echo -e "\nInstalling_pip (and uninstalling) EXTRAS"
       pip3 uninstall -y $EXTRAS
       pip3 install $CONSTRAINTS --cache-dir=/output/wheels $EXTRAS
   fi
